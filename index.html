@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Calculadora Binaria Cibercolegio UCN</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #d4d5d6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container { display: flex; gap: 20px; }
+
+.manual {
+    width: 220px;
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 15px;
+    font-size: 18px;
+    height: 480px;
+    overflow-y: auto;
+}
+
+.calc {
+    background: #f2f2f2;
+    padding: 15px;
+    border-radius: 15px;
+    width: 460px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+
+.logo { width: 80%; }
+
+.display {
+    background: black;
+    color: #00fbff;
+    font-size: 50px;
+    padding: 10px;
+    margin-bottom: 10px;
+    text-align: right;
+    border-radius: 8px;
+}
+
+button {
+    width: 105px;
+    height: 65px;
+    margin: 3px;
+    font-size: 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+}
+
+button:active { transform: scale(0.9); }
+
+.num { background: #4dd0e1; }
+.op { background: #ffd582; }
+.control { background: #ef5350; color: white; }
+.igual { background: #9066bb; width: 100%; }
+
+.panel {
+    width: 300px;
+    background: #ffffffe9;
+    border-radius: 15px;
+    padding: 15px;
+    font-size: 20px;
+    height: 480px;
+    overflow-y: auto;
+}
+
+.log { margin-bottom: 10px; }
+
+.firma {
+    margin-top: 10px;
+    border-top: 2px solid #ccc;
+    text-align: center;
+    font-size: 10px;
+}
+
+/* Circuitos */
+.circuito { margin-top: 5px; padding: 5px; }
+
+.bombillo {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    margin: 2px;
+}
+
+.on { background: yellow; }
+.off { background: #444; }
+
+.gate {
+    margin-top: 10px;
+    padding: 8px;
+    background: #f0f4ff;
+    border-left: 5px solid #9066bb;
+    border-radius: 8px;
+}
+
+svg { width: 100%; height: 60px; }
+
+.small {
+    width: 47px;
+    height: 35px;
+    font-size: 15px;
+    background: #fdcea1;
+}
+
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="manual">
+<h3>Manual de uso</h3>
+<b>1 y 0:</b> Ingresar números binarios<br><br>
+<b>+ :</b> Suma binaria<br>
+<b>- :</b> Resta<br>
+<b>× :</b> Multiplicación (AND)<br>
+<b>÷ :</b> División<br><br>
+<b>C2:</b> Complemento a 2 (representa negativos)<br><br>
+<b>AC:</b> Reiniciar<br>
+<b>CE:</b> Borrar último dígito<br><br>
+
+<h4>Conversión</h4>
+Decimal → Binario<br>
+Binario → Decimal<br>
+</div>
+
+<div class="calc">
+<img src="ciber-logo.png" class="logo">
+<div class="display" id="display">0</div>
+
+<button class="control" onclick="clearAll()">AC</button>
+<button class="control" onclick="deleteOne()">CE</button>
+<button class="op" onclick="setOp('+')">+</button>
+<button class="op" onclick="setOp('-')">-</button>
+
+<button class="op" onclick="setOp('*')">×</button>
+<button class="op" onclick="setOp('/')">÷</button>
+<button class="op" onclick="complemento2()">C2</button>
+
+<button class="igual" onclick="calcular()">=</button>
+
+<button class="num" onclick="add('1')">1</button>
+<button class="num" onclick="add('0')">0</button>
+
+<button class="op" onclick="binToDec()">Bin→Dec</button>
+<button class="op" onclick="decToBin()">Dec→Bin</button>
+
+<br>    
+
+<button class="small" onclick="add('2')">2</button>
+<button class="small" onclick="add('3')">3</button>
+<button class="small" onclick="add('4')">4</button>
+<button class="small" onclick="add('5')">5</button>
+<button class="small" onclick="add('6')">6</button>
+<button class="small" onclick="add('7')">7</button>
+<button class="small" onclick="add('8')">8</button>
+<button class="small" onclick="add('9')">9</button>
+
+</div>
+
+<div class="panel">
+<h3>Procedimiento</h3>
+<div id="log"></div>
+<div class="firma">Developed by Mary Johana Galeano</div>
+</div>
+
+</div>
+
+<script>
+let valor = "";
+let operador = "";
+let memoria = "";
+let expresion = "";
+
+/* DISPLAY SOLO MUESTRA OPERACIÓN */
+function actualizarDisplay() {
+    document.getElementById("display").innerText = expresion || "0";
+}
+
+function add(num) {
+
+    // Si estamos en modo operación binaria, solo permitir 0 y 1
+    if (operador && (num !== '0' && num !== '1')) {
+        agregarLog("⚠️ Solo se permiten 0 y 1 en operaciones binarias");
+        return;
+    }
+
+    valor += num;
+    expresion += num;
+    actualizarDisplay();
+}
+
+function setOp(op) {
+    if (valor === "") return;
+    memoria = valor;
+    operador = op;
+    expresion += " " + op + " ";
+    valor = "";
+    actualizarDisplay();
+}
+
+function clearAll() {
+    valor = "";
+    operador = "";
+    memoria = "";
+    expresion = "";
+    document.getElementById("log").innerHTML = "";
+    actualizarDisplay();
+}
+
+function deleteOne() {
+    valor = valor.slice(0, -1);
+    expresion = expresion.slice(0, -1);
+    actualizarDisplay();
+}
+
+function agregarLog(texto) {
+    document.getElementById("log").innerHTML += `<div class="log">${texto}</div>`;
+}
+
+/* 🔌 SIMULACIÓN ON/OFF */
+function circuitoVisual(a, b, op) {
+    let html = "<div class='circuito'><b>Simulación ON/OFF:</b><br>";
+
+    let max = Math.max(a.length, b.length);
+
+    for (let i = 0; i < max; i++) {
+        let bitA = a[a.length - 1 - i] || "0";
+        let bitB = b[b.length - 1 - i] || "0";
+
+        let r = 0;
+
+        if (op === '+') r = bitA ^ bitB;
+        if (op === '*') r = bitA & bitB;
+
+        html += `
+        <div>
+        <span class="bombillo ${r ? 'on':'off'}"></span>
+        ${r ? 'ON (Encendido)' : 'OFF (Apagado)'}
+        </div>`;
+    }
+
+    return html + "</div>";
+}
+
+/* COMPUERTAS */
+function compuertaSVG(tipo, a, b, resultado) {
+    let simbolo = tipo === "XOR" ? "⊕" : "∧";
+    let titulo = tipo === "XOR" ? "Compuerta XOR (Suma)" : "Compuerta AND (Multiplicación)";
+
+    return `
+    <div class="gate">
+    <b>${titulo}</b>
+    <svg viewBox="0 0 300 80">
+    <text x="10" y="30">${a}</text>
+    <text x="10" y="60">${b}</text>
+    <line x1="40" y1="25" x2="120" y2="25" stroke="black"/>
+    <line x1="40" y1="55" x2="120" y2="55" stroke="black"/>
+    <rect x="120" y="15" width="60" height="50" fill="#ddd" stroke="black"/>
+    <text x="140" y="45">${simbolo}</text>
+    <line x1="180" y1="40" x2="260" y2="40" stroke="black"/>
+    <text x="265" y="45">${resultado}</text>
+    </svg>
+    </div>`;
+}
+
+/* CALCULAR */
+function calcular() {
+    if (memoria === "" || valor === "" || operador === "") {
+        agregarLog("⚠️ Operación incompleta");
+        return;
+    }
+
+    let a = parseInt(memoria,2);
+    let b = parseInt(valor,2);
+    let resultado;
+
+    agregarLog(`Operación: ${expresion}`);
+
+    /* 🔌 SIMULACIÓN */
+    agregarLog(circuitoVisual(memoria, valor, operador));
+
+    switch(operador){
+
+        case '+':
+            resultado = a + b;
+            agregarLog(compuertaSVG("XOR", memoria, valor, resultado.toString(2)));
+        break;
+
+        case '*':
+            resultado = a * b;
+            agregarLog(compuertaSVG("AND", memoria, valor, resultado.toString(2)));
+        break;
+
+        case '-':
+            resultado = a - b;
+        break;
+
+        case '/':
+            if (b === 0) {
+                agregarLog("❌ Error: División por cero");
+                return;
+            }
+            resultado = Math.floor(a/b);
+        break;
+    }
+
+    agregarLog(`Resultado: ${resultado.toString(2)}`);
+
+    valor = "";
+    operador = "";
+    memoria = "";
+    expresion = "";
+
+    actualizarDisplay();
+}
+
+function complemento2() {
+    if (!valor) return;
+
+    let original = valor;
+
+    let bits = valor.split('').map(b => b === '0' ? '1' : '0');
+
+    let carry = 1;
+    for (let i = bits.length - 1; i >= 0; i--) {
+        if (bits[i] === '1' && carry === 1) {
+            bits[i] = '0';
+        } else if (carry === 1) {
+            bits[i] = '1';
+            carry = 0;
+        }
+    }
+
+    let resultado = bits.join('');
+
+    agregarLog(`C2: ${original} → ${resultado}`);
+
+    valor = resultado;
+    expresion = valor;
+    actualizarDisplay();
+}
+
+function binToDec() {
+    if (!valor) return;
+
+    let dec = parseInt(valor, 2);
+
+    agregarLog(`Conversión: ${valor} → ${dec}`);
+
+    valor = dec.toString();
+    expresion = valor;
+    actualizarDisplay();
+}
+
+function decToBin() {
+    if (!valor) return;
+
+    let bin = parseInt(valor).toString(2);
+
+    agregarLog(`Conversión: ${valor} → ${bin}`);
+
+    valor = bin;
+    expresion = valor;
+    actualizarDisplay();
+}
+
+</script>
+
+</body>
+</html>
